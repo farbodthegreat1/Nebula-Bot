@@ -1,5 +1,4 @@
 import httpx
-import sqlite3
 import asyncio
 import logging
 from datetime import datetime
@@ -12,6 +11,9 @@ REQUIRED_CHANNELS = ["@Nebulastars", "@Nebulastarsgp"]
 BOT_USERNAME = "Nebularefbot"
 STARS_PER_REFERRAL = 3
 BASE_URL = f"https://api.telegram.org/bot{TOKEN}"
+
+SUPABASE_URL = "https://iikfjulcpudvlymdgtzq.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpa2ZqdWxjcHVkdmx5bWRndHpxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjQxNzU2NSwiZXhwIjoyMDk3OTkzNTY1fQ.rxeXZbi4cYcuMyvz4b20MUB7ofVsjJX8MpY2C2enTjo"
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
@@ -39,104 +41,113 @@ EMOJI = {
     "linkarrow":pe("5803120932864136855", "👇"),
 }
 
+# ==================== Supabase ====================
+def sb_headers():
+    return {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+    }
 
-# ==================== دیتابیس ====================
-def init_db():
-    conn = sqlite3.connect("nebula.db")
-    c = conn.cursor()
-    c.execute("""CREATE TABLE IF NOT EXISTS users (
-        user_id INTEGER PRIMARY KEY, username TEXT, full_name TEXT,
-        referral_count INTEGER DEFAULT 0, stars INTEGER DEFAULT 0,
-        referred_by INTEGER, joined_at TEXT)""")
-    c.execute("""CREATE TABLE IF NOT EXISTS referrals (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        referrer_id INTEGER, referred_id INTEGER, joined_at TEXT)""")
-    c.execute("""CREATE TABLE IF NOT EXISTS star_requests (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER, post_link TEXT, status TEXT DEFAULT 'pending', created_at TEXT)""")
-    c.execute("""CREATE TABLE IF NOT EXISTS tickets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER, message TEXT, status TEXT DEFAULT 'open', created_at TEXT)""")
-    conn.commit()
-    conn.close()
+async def sb_get(table, params=""):
+    async with httpx.AsyncClient() as client:
+        r = await client.get(f"{SUPABASE_URL}/rest/v1/{table}?{params}", headers=sb_headers())
+        return r.json()
 
-def get_user(user_id):
-    conn = sqlite3.connect("nebula.db")
-    c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
-    user = c.fetchone()
-    conn.close()
-    return user
+async def sb_post(table, data):
+    async with httpx.AsyncClient() as client:
+        r = await client.post(f"{SUPABASE_URL}/rest/v1/{table}", headers=sb_headers(), json=data)
+        return r.json()
 
-def add_user(user_id, username, full_name, referred_by=None):
-    conn = sqlite3.connect("nebula.db")
-    c = conn.cursor()
-    c.execute("INSERT OR IGNORE INTO users (user_id, username, full_name, referred_by, joined_at) VALUES (?,?,?,?,?)",
-              (user_id, username, full_name, referred_by, datetime.now().isoformat()))
-    conn.commit()
-    conn.close()
+async def sb_patch(table, params, data):
+    async with httpx.AsyncClient() as client:
+        r = await client.patch(f"{SUPABASE_URL}/rest/v1/{table}?{params}", headers=sb_headers(), json=data)
+        return r.json()
 
-def add_referral(referrer_id, referred_id):
-    conn = sqlite3.connect("nebula.db")
-    c = conn.cursor()
-    c.execute("SELECT id FROM referrals WHERE referred_id = ?", (referred_id,))
-    if c.fetchone():
-        conn.close()
+async def init_db():
+    # جداول رو از طریق Supabase SQL Editor باید بسازی
+    # اینجا فقط چک می‌کنیم اتصال برقراره
+    async with httpx.AsyncClient() as client:
+        r = await client.get(f"{SUPABASE_URL}/rest/v1/users?limit=1", headers=sb_headers())
+        if r.status_code == 200:
+            logging.info("✅ اتصال به Supabase برقرار شد")
+        else:
+            logging.error(f"❌ خطا در اتصال به Supabase: {r.text}")
+
+async def get_user(user_id):
+    rows = await sb_get("users", f"user_id=eq.{user_id}")
+    return rows[0] if rows else None
+
+async def add_user(user_id, username, full_name, referred_by=None):
+    existing = await get_user(user_id)
+    if existing:
+        return
+    data = {
+        "user_id": user_id,
+        "username": username,
+        "full_name": full_name,
+        "referred_by": referred_by,
+        "referral_count": 0,
+        "stars": 0,
+        "joined_at": datetime.now().isoformat()
+    }
+    await sb_post("users", data)
+
+async def add_referral(referrer_id, referred_id):
+    existing = await sb_get("referrals", f"referred_id=eq.{referred_id}")
+    if existing:
         return False
-    c.execute("INSERT INTO referrals (referrer_id, referred_id, joined_at) VALUES (?,?,?)",
-              (referrer_id, referred_id, datetime.now().isoformat()))
-    c.execute("UPDATE users SET referral_count = referral_count + 1 WHERE user_id = ?", (referrer_id,))
-    c.execute("SELECT referral_count FROM users WHERE user_id = ?", (referrer_id,))
-    row = c.fetchone()
+    await sb_post("referrals", {
+        "referrer_id": referrer_id,
+        "referred_id": referred_id,
+        "joined_at": datetime.now().isoformat()
+    })
+    referrer = await get_user(referrer_id)
+    if not referrer:
+        return False
+    new_count = referrer["referral_count"] + 1
+    await sb_patch("users", f"user_id=eq.{referrer_id}", {"referral_count": new_count})
     got_star = False
-    if row and row[0] % STARS_PER_REFERRAL == 0:
-        c.execute("UPDATE users SET stars = stars + 1 WHERE user_id = ?", (referrer_id,))
+    if new_count % STARS_PER_REFERRAL == 0:
+        await sb_patch("users", f"user_id=eq.{referrer_id}", {"stars": referrer["stars"] + 1})
         got_star = True
-    conn.commit()
-    conn.close()
     return got_star
 
-def add_star_request(user_id, post_link):
-    conn = sqlite3.connect("nebula.db")
-    c = conn.cursor()
-    c.execute("INSERT INTO star_requests (user_id, post_link, created_at) VALUES (?,?,?)",
-              (user_id, post_link, datetime.now().isoformat()))
-    req_id = c.lastrowid
-    conn.commit()
-    conn.close()
-    return req_id
+async def add_star_request(user_id, post_link):
+    rows = await sb_post("star_requests", {
+        "user_id": user_id,
+        "post_link": post_link,
+        "status": "pending",
+        "created_at": datetime.now().isoformat()
+    })
+    return rows[0]["id"] if rows else 0
 
-def add_ticket(user_id, message):
-    conn = sqlite3.connect("nebula.db")
-    c = conn.cursor()
-    c.execute("INSERT INTO tickets (user_id, message, created_at) VALUES (?,?,?)",
-              (user_id, message, datetime.now().isoformat()))
-    ticket_id = c.lastrowid
-    conn.commit()
-    conn.close()
-    return ticket_id
+async def add_ticket(user_id, message):
+    rows = await sb_post("tickets", {
+        "user_id": user_id,
+        "message": message,
+        "status": "open",
+        "created_at": datetime.now().isoformat()
+    })
+    return rows[0]["id"] if rows else 0
 
-def done_request(user_id, req_id):
-    conn = sqlite3.connect("nebula.db")
-    c = conn.cursor()
-    c.execute("UPDATE users SET stars = stars - 1 WHERE user_id = ? AND stars > 0", (user_id,))
-    c.execute("UPDATE star_requests SET status = 'done' WHERE id = ?", (req_id,))
-    conn.commit()
-    conn.close()
+async def done_request(user_id, req_id):
+    user = await get_user(user_id)
+    if user and user["stars"] > 0:
+        await sb_patch("users", f"user_id=eq.{user_id}", {"stars": user["stars"] - 1})
+    await sb_patch("star_requests", f"id=eq.{req_id}", {"status": "done"})
 
-def get_stats():
-    conn = sqlite3.connect("nebula.db")
-    c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM users")
-    total_users = c.fetchone()[0]
-    c.execute("SELECT COUNT(*) FROM referrals")
-    total_referrals = c.fetchone()[0]
-    c.execute("SELECT COUNT(*) FROM star_requests WHERE status = 'pending'")
-    pending = c.fetchone()[0]
-    c.execute("SELECT COUNT(*) FROM tickets WHERE status = 'open'")
-    tickets = c.fetchone()[0]
-    conn.close()
-    return total_users, total_referrals, pending, tickets
+async def get_stats():
+    users = await sb_get("users", "select=count")
+    referrals = await sb_get("referrals", "select=count")
+    pending = await sb_get("star_requests", "status=eq.pending&select=count")
+    tickets = await sb_get("tickets", "status=eq.open&select=count")
+    total_users = users[0]["count"] if users else 0
+    total_referrals = referrals[0]["count"] if referrals else 0
+    pending_count = pending[0]["count"] if pending else 0
+    tickets_count = tickets[0]["count"] if tickets else 0
+    return total_users, total_referrals, pending_count, tickets_count
 
 # ==================== API تلگرام ====================
 async def api(method, **kwargs):
@@ -170,11 +181,11 @@ async def check_membership(user_id):
 def main_menu():
     return {
         "inline_keyboard": [[
-            {"text": "استارز", "callback_data": "stars", "icon_custom_emoji_id": "5803311247159988988"},
-            {"text": "ریفرال", "callback_data": "referral", "icon_custom_emoji_id": "5305265301917549162"}
+            {"text": "استارز", "callback_data": "stars"},
+            {"text": "ریفرال", "callback_data": "referral"}
         ], [
-            {"text": "حساب کاربری", "callback_data": "account", "icon_custom_emoji_id": "5875255350982087963"},
-            {"text": "پشتیبانی", "callback_data": "support", "icon_custom_emoji_id": "5803311247159988988"}
+            {"text": "حساب کاربری", "callback_data": "account"},
+            {"text": "پشتیبانی", "callback_data": "support"}
         ]]
     }
 
@@ -187,13 +198,13 @@ def join_keyboard():
 
 def back_button(cb="back_main"):
     return {"inline_keyboard": [[
-        {"text": "بازگشت", "callback_data": cb, "icon_custom_emoji_id": "5416041192905265756"}
+        {"text": "بازگشت", "callback_data": cb}
     ]]}
 
 def stars_keyboard():
     return {"inline_keyboard": [
-        [{"text": "دریافت استار", "callback_data": "claim_star", "icon_custom_emoji_id": "5325547803936572038"}],
-        [{"text": "بازگشت", "callback_data": "back_main", "icon_custom_emoji_id": "5416041192905265756"}]
+        [{"text": "دریافت استار", "callback_data": "claim_star"}],
+        [{"text": "بازگشت", "callback_data": "back_main"}]
     ]}
 
 # ==================== هندلرها ====================
@@ -214,13 +225,14 @@ async def handle_start(message, args=""):
         except:
             pass
 
-    add_user(uid, uname, fname, referred_by)
+    await add_user(uid, uname, fname, referred_by)
 
     if referred_by:
-        referrer = get_user(referred_by)
+        referrer = await get_user(referred_by)
         if referrer:
-            got_star = add_referral(referred_by, uid)
-            ref_count = get_user(referred_by)[3]
+            got_star = await add_referral(referred_by, uid)
+            referrer_updated = await get_user(referred_by)
+            ref_count = referrer_updated["referral_count"] if referrer_updated else 0
             msg = (f"🎉 یک نفر با لینک دعوت شما عضو شد!\n\n"
                    f"👤 کاربر: {fname}\n🆔 آیدی: {uid}\n"
                    f"📅 زمان: {datetime.now().strftime('%Y/%m/%d - %H:%M')}\n"
@@ -293,9 +305,9 @@ async def handle_callback(callback):
             reply_markup=main_menu())
 
     elif data == "stars":
-        db_user = get_user(uid)
-        ref_count = db_user[3] if db_user else 0
-        stars = db_user[4] if db_user else 0
+        db_user = await get_user(uid)
+        ref_count = db_user["referral_count"] if db_user else 0
+        stars = db_user["stars"] if db_user else 0
         remaining = STARS_PER_REFERRAL - (ref_count % STARS_PER_REFERRAL)
         if remaining == STARS_PER_REFERRAL:
             remaining = 0
@@ -311,8 +323,8 @@ async def handle_callback(callback):
         await edit_message(chat_id, msg_id, text, reply_markup=stars_keyboard())
 
     elif data == "referral":
-        db_user = get_user(uid)
-        ref_count = db_user[3] if db_user else 0
+        db_user = await get_user(uid)
+        ref_count = db_user["referral_count"] if db_user else 0
         link = f"https://t.me/{BOT_USERNAME}?start={uid}"
         await edit_message(chat_id, msg_id,
             f"{EMOJI['globe']} توجه داشته باشید که هر 1 نفر برابر با 1 امتیاز میباشد.\n\n"
@@ -330,8 +342,8 @@ async def handle_callback(callback):
             reply_markup=back_button("stars"))
 
     elif data == "claim_star":
-        db_user = get_user(uid)
-        stars = db_user[4] if db_user else 0
+        db_user = await get_user(uid)
+        stars = db_user["stars"] if db_user else 0
         if stars <= 0:
             await edit_message(chat_id, msg_id,
                 f"⚠️ شما در حال حاضر استاری برای دریافت ندارید.\n\n"
@@ -346,9 +358,9 @@ async def handle_callback(callback):
             reply_markup=back_button("stars"))
 
     elif data == "account":
-        db_user = get_user(uid)
-        ref_count = db_user[3] if db_user else 0
-        stars = db_user[4] if db_user else 0
+        db_user = await get_user(uid)
+        ref_count = db_user["referral_count"] if db_user else 0
+        stars = db_user["stars"] if db_user else 0
         username_text = f"@{uname}" if uname else "ندارد"
         is_owner = uid == OWNER_ID
         owner_line = f"\n{EMOJI['owner']} مالک ربات\n" if is_owner else ""
@@ -401,7 +413,7 @@ async def handle_message(message):
         try:
             target_uid = int(parts[1])
             req_id = int(parts[2])
-            done_request(target_uid, req_id)
+            await done_request(target_uid, req_id)
             await send_message(target_uid,
                 f"{EMOJI['starz']} <b>استار شما با موفقیت ثبت شد!</b>\n\n"
                 "ممنون از اینکه در نبولا استارز فعال هستید. 💫")
@@ -411,7 +423,7 @@ async def handle_message(message):
         return
 
     if text.startswith("/stats") and uid == OWNER_ID:
-        total, refs, pending, tickets = get_stats()
+        total, refs, pending, tickets = await get_stats()
         await send_message(uid,
             f"📊 <b>آمار ربات نبولا</b>\n\n"
             f"👥 کل کاربران: <code>{total}</code>\n"
@@ -431,7 +443,7 @@ async def handle_message(message):
     if state == "waiting_post_link":
         user_states.pop(uid, None)
         stars = state_data.get("stars", 1)
-        req_id = add_star_request(uid, text)
+        req_id = await add_star_request(uid, text)
         reserve_msg = (
             f"⭐️ <b>درخواست استار جدید</b>\n\n"
             f"👤 کاربر: {fname}\n🆔 آیدی: <code>{uid}</code>\n"
@@ -458,7 +470,7 @@ async def handle_message(message):
 
     elif state == "waiting_support":
         user_states.pop(uid, None)
-        ticket_id = add_ticket(uid, text)
+        ticket_id = await add_ticket(uid, text)
         ticket_msg = (
             f"🎫 <b>تیکت شماره #{ticket_id}</b>\n\n"
             f"👤 کاربر: {fname}\n🆔 آیدی: <code>{uid}</code>\n"
@@ -486,7 +498,7 @@ async def handle_message(message):
 
 # ==================== پولینگ ====================
 async def main():
-    init_db()
+    await init_db()
     offset = None
     print("✅ ربات نبولا استارز در حال اجراست...")
     async with httpx.AsyncClient() as client:
