@@ -1,10 +1,10 @@
-import httpx
+ import httpx
 import sqlite3
 import asyncio
 import logging
 from datetime import datetime
 
-# ==================== ØªÙ†Ø¸ÛŒÙ…Ø§Øª ====================
+# ==================== تنظیمات ====================
 TOKEN = "8600298019:AAGuH6U-BKB3O30LbJAOubB4A01Yy8_TDMI"
 OWNER_ID = 1374081605
 RESERVE_CHANNEL = -1003764301938
@@ -15,32 +15,32 @@ BASE_URL = f"https://api.telegram.org/bot{TOKEN}"
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-# ==================== Ø§ÛŒÙ…ÙˆØ¬ÛŒ Ù¾Ø±ÛŒÙ…ÛŒÙˆÙ… ====================
-def pe(emoji_id, fallback="â­"):
+# ==================== ایموجی پریمیوم ====================
+def pe(emoji_id, fallback="⭐"):
     return f"<tg-emoji emoji-id='{emoji_id}'>{fallback}</tg-emoji>"
 
 EMOJI = {
-    "stars":    pe("5803311247159988988", "â­"),
-    "account":  pe("5875255350982087963", "ðŸ‘¤"),
-    "support":  pe("5803311247159988988", "ðŸŽ§"),
-    "welcome1": pe("5893189613991759811", "ðŸ’¥"),
-    "welcome2": pe("5809695698865623554", "ðŸŒŸ"),
-    "arrow":    pe("5803120932864136855", "ðŸ‘‡"),
-    "name":     pe("5217822164362739968", "ðŸ‘‘"),
-    "id":       pe("5422439311196834318", "ðŸ’¡"),
-    "username": pe("5424972470023104089", "ðŸ”¥"),
-    "invites":  pe("5415655814079723871", "ðŸ”"),
-    "starz":    pe("5325547803936572038", "âœ¨"),
-    "owner":    pe("5438496463044752972", "â­"),
-    "back":     pe("5416041192905265756", "ðŸ”™"),
-    "acctitle": pe("5461117441612462242", "ðŸ˜Š"),
-    "referral": pe("5305265301917549162", "ðŸ”—"),
-    "globe":    pe("5447410659077661506", "ðŸŒ"),
-    "linkarrow":pe("5803120932864136855", "ðŸ‘‡"),
+    "stars":    pe("5803311247159988988", "⭐"),
+    "account":  pe("5875255350982087963", "👤"),
+    "support":  pe("5803311247159988988", "🎧"),
+    "welcome1": pe("5893189613991759811", "💥"),
+    "welcome2": pe("5809695698865623554", "🌟"),
+    "arrow":    pe("5803120932864136855", "👇"),
+    "name":     pe("5217822164362739968", "👑"),
+    "id":       pe("5422439311196834318", "💡"),
+    "username": pe("5424972470023104089", "🔥"),
+    "invites":  pe("5415655814079723871", "🔝"),
+    "starz":    pe("5325547803936572038", "✨"),
+    "owner":    pe("5438496463044752972", "⭐"),
+    "back":     pe("5416041192905265756", "🔙"),
+    "acctitle": pe("5461117441612462242", "😊"),
+    "referral": pe("5305265301917549162", "🔗"),
+    "globe":    pe("5447410659077661506", "🌐"),
+    "linkarrow":pe("5803120932864136855", "👇"),
 }
 
 
-# ==================== Ø¯ÛŒØªØ§Ø¨ÛŒØ³ ====================
+# ==================== دیتابیس ====================
 def init_db():
     conn = sqlite3.connect("nebula.db")
     c = conn.cursor()
@@ -138,7 +138,7 @@ def get_stats():
     conn.close()
     return total_users, total_referrals, pending, tickets
 
-# ==================== API ØªÙ„Ú¯Ø±Ø§Ù… ====================
+# ==================== API تلگرام ====================
 async def api(method, **kwargs):
     async with httpx.AsyncClient() as client:
         r = await client.post(f"{BASE_URL}/{method}", json=kwargs, timeout=30)
@@ -166,37 +166,37 @@ async def check_membership(user_id):
             return False
     return True
 
-# ==================== Ú©ÛŒØ¨ÙˆØ±Ø¯Ù‡Ø§ ====================
+# ==================== کیبوردها ====================
 def main_menu():
     return {
         "inline_keyboard": [[
-            {"text": "Ø§Ø³ØªØ§Ø±Ø²", "callback_data": "stars", "icon_custom_emoji_id": "5803311247159988988"},
-            {"text": "Ø±ÙØ±Ø§Ù„", "callback_data": "referral", "icon_custom_emoji_id": "5305265301917549162"}
+            {"text": "استارز", "callback_data": "stars", "icon_custom_emoji_id": "5803311247159988988"},
+            {"text": "رفرال", "callback_data": "referral", "icon_custom_emoji_id": "5305265301917549162"}
         ], [
-            {"text": "Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ", "callback_data": "account", "icon_custom_emoji_id": "5875255350982087963"},
-            {"text": "Ù¾Ø´ØªÛŒØ¨Ø§Ù†ÛŒ", "callback_data": "support", "icon_custom_emoji_id": "5803311247159988988"}
+            {"text": "حساب کاربری", "callback_data": "account", "icon_custom_emoji_id": "5875255350982087963"},
+            {"text": "پشتیبانی", "callback_data": "support", "icon_custom_emoji_id": "5803311247159988988"}
         ]]
     }
 
 def join_keyboard():
     buttons = []
     for ch in REQUIRED_CHANNELS:
-        buttons.append([{"text": f"Ø¹Ø¶ÙˆÛŒØª Ø¯Ø± {ch}", "url": f"https://t.me/{ch[1:]}"}])
-    buttons.append([{"text": "âœ… Ø¹Ø¶Ùˆ Ø´Ø¯Ù…", "callback_data": "check_join"}])
+        buttons.append([{"text": f"عضویت در {ch}", "url": f"https://t.me/{ch[1:]}"}])
+    buttons.append([{"text": "✅ عضو شدم", "callback_data": "check_join"}])
     return {"inline_keyboard": buttons}
 
 def back_button(cb="back_main"):
     return {"inline_keyboard": [[
-        {"text": "Ø¨Ø§Ø²Ú¯Ø´Øª", "callback_data": cb, "icon_custom_emoji_id": "5416041192905265756"}
+        {"text": "بازگشت", "callback_data": cb, "icon_custom_emoji_id": "5416041192905265756"}
     ]]}
 
 def stars_keyboard():
     return {"inline_keyboard": [
-        [{"text": "Ø¯Ø±ÛŒØ§ÙØª Ø§Ø³ØªØ§Ø±Ø²", "callback_data": "claim_star", "icon_custom_emoji_id": "5325547803936572038"}],
-        [{"text": "Ø¨Ø§Ø²Ú¯Ø´Øª", "callback_data": "back_main", "icon_custom_emoji_id": "5416041192905265756"}]
+        [{"text": "دریافت استارز", "callback_data": "claim_star", "icon_custom_emoji_id": "5325547803936572038"}],
+        [{"text": "بازگشت", "callback_data": "back_main", "icon_custom_emoji_id": "5416041192905265756"}]
     ]}
 
-# ==================== Ù‡Ù†Ø¯Ù„Ø±Ù‡Ø§ ====================
+# ==================== هندلرها ====================
 user_states = {}
 
 async def handle_start(message, args=""):
@@ -221,19 +221,19 @@ async def handle_start(message, args=""):
         if referrer:
             got_star = add_referral(referred_by, uid)
             ref_count = get_user(referred_by)[3]
-            msg = (f"ðŸŽ‰ ÛŒÚ© Ù†ÙØ± Ø¨Ø§ Ù„ÛŒÙ†Ú© Ø¯Ø¹ÙˆØª Ø´Ù…Ø§ Ø¹Ø¶Ùˆ Ø´Ø¯!\n\n"
-                   f"ðŸ‘¤ Ú©Ø§Ø±Ø¨Ø±: {fname}\nðŸ†” Ø¢ÛŒØ¯ÛŒ: {uid}\n"
-                   f"ðŸ“… Ø²Ù…Ø§Ù†: {datetime.now().strftime('%Y/%m/%d - %H:%M')}\n"
-                   f"ðŸ‘¥ Ú©Ù„ Ø¯Ø¹ÙˆØªâ€ŒÙ‡Ø§ÛŒ Ø´Ù…Ø§: {ref_count}")
+            msg = (f"🎉 یک نفر با لینک دعوت شما عضو شد!\n\n"
+                   f"👤 کاربر: {fname}\n🆔 آیدی: {uid}\n"
+                   f"📅 زمان: {datetime.now().strftime('%Y/%m/%d - %H:%M')}\n"
+                   f"👥 کل دعوت‌های شما: {ref_count}")
             if got_star:
-                msg += "\n\nâ­ï¸ ØªØ¨Ø±ÛŒÚ©! ÛŒÚ© Ø§Ø³ØªØ§Ø± Ø¬Ø¯ÛŒØ¯ Ø¯Ø±ÛŒØ§ÙØª Ú©Ø±Ø¯ÛŒØ¯!"
+                msg += "\n\n⭐️ تبریک! یک استار جدید دریافت کردید!"
             try:
                 await send_message(referred_by, msg)
             except:
                 pass
-            reserve_msg = (f"ðŸ“¥ Ø±ÛŒÙØ±Ø§Ù„ Ø¬Ø¯ÛŒØ¯\n\nðŸ‘¤ Ú©Ø§Ø±Ø¨Ø±: {fname} | @{uname or 'Ù†Ø¯Ø§Ø±Ø¯'}\n"
-                           f"ðŸ†” Ø¢ÛŒØ¯ÛŒ: {uid}\nðŸ‘¥ Ø¯Ø¹ÙˆØªâ€ŒÚ©Ù†Ù†Ø¯Ù‡: Ø¢ÛŒØ¯ÛŒ {referred_by}\n"
-                           f"ðŸ“… Ø²Ù…Ø§Ù†: {datetime.now().strftime('%Y/%m/%d - %H:%M')}")
+            reserve_msg = (f"📥 ریفرال جدید\n\n👤 کاربر: {fname} | @{uname or 'ندارد'}\n"
+                           f"🆔 آیدی: {uid}\n👥 دعوت‌کننده: آیدی {referred_by}\n"
+                           f"📅 زمان: {datetime.now().strftime('%Y/%m/%d - %H:%M')}")
             try:
                 await send_message(RESERVE_CHANNEL, reserve_msg)
             except:
@@ -242,14 +242,14 @@ async def handle_start(message, args=""):
     is_member = await check_membership(uid)
     if not is_member:
         await send_message(uid,
-            f"Ø³Ù„Ø§Ù… {fname} Ø¹Ø²ÛŒØ²! ðŸ‘‹\n\nØ¨Ø±Ø§ÛŒ Ø§Ø³ØªÙØ§Ø¯Ù‡ Ø§Ø² Ø±Ø¨Ø§Øª Ù†Ø¨ÙˆÙ„Ø§ Ø§Ø³ØªØ§Ø±Ø²ØŒ Ù„Ø·ÙØ§Ù‹ Ø§Ø¨ØªØ¯Ø§ Ø¯Ø± Ú©Ø§Ù†Ø§Ù„â€ŒÙ‡Ø§ÛŒ Ø²ÛŒØ± Ø¹Ø¶Ùˆ Ø´ÙˆÛŒØ¯:",
+            f"سلام {fname} عزیز! 👋\n\nبرای استفاده از ربات نبولا استارز، لطفاً ابتدا در کانال‌های زیر عضو شوید:",
             reply_markup=join_keyboard())
         return
 
     await send_message(uid,
-        f"{EMOJI['welcome1']} Ø³Ù„Ø§Ù… {fname} Ø¹Ø²ÛŒØ²!\n\n"
-        f"Ø¨Ù‡ Ø±Ø¨Ø§Øª Ø±Ø³Ù…ÛŒ Ù†Ø¨ÙˆÙ„Ø§ Ø§Ø³ØªØ§Ø±Ø² Ø®ÙˆØ´ Ø¢Ù…Ø¯ÛŒØ¯ {EMOJI['welcome2']}\n\n"
-        f"Ø§Ø² Ù…Ù†ÙˆÛŒ Ø²ÛŒØ± Ú¯Ø²ÛŒÙ†Ù‡ Ù…ÙˆØ±Ø¯ Ù†Ø¸Ø± Ø®ÙˆØ¯ Ø±Ø§ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯ {EMOJI['arrow']}",
+        f"{EMOJI['welcome1']} سلام {fname} عزیز!\n\n"
+        f"به ربات رسمی نبولا استارز خوش آمدید {EMOJI['welcome2']}\n\n"
+        f"از منوی زیر گزینه مورد نظر خود را انتخاب کنید {EMOJI['arrow']}",
         reply_markup=main_menu())
 
 async def handle_callback(callback):
@@ -269,27 +269,27 @@ async def handle_callback(callback):
         is_member = await check_membership(uid)
         if not is_member:
             await edit_message(chat_id, msg_id,
-                "âš ï¸ Ù‡Ù†ÙˆØ² Ø¯Ø± Ù‡Ù…Ù‡ Ú©Ø§Ù†Ø§Ù„â€ŒÙ‡Ø§ Ø¹Ø¶Ùˆ Ù†Ø´Ø¯Ù‡â€ŒØ§ÛŒØ¯!\n\nÙ„Ø·ÙØ§Ù‹ Ø§Ø¨ØªØ¯Ø§ Ø¹Ø¶Ùˆ Ø´ÙˆÛŒØ¯:",
+                "⚠️ هنوز در همه کانال‌ها عضو نشده‌اید!\n\nلطفاً ابتدا عضو شوید:",
                 reply_markup=join_keyboard())
             return
         await edit_message(chat_id, msg_id,
-            f"{EMOJI['welcome1']} Ø³Ù„Ø§Ù… {fname} Ø¹Ø²ÛŒØ²!\n\n"
-            f"Ø¨Ù‡ Ø±Ø¨Ø§Øª Ø±Ø³Ù…ÛŒ Ù†Ø¨ÙˆÙ„Ø§ Ø§Ø³ØªØ§Ø±Ø² Ø®ÙˆØ´ Ø¢Ù…Ø¯ÛŒØ¯ {EMOJI['welcome2']}\n\n"
-            f"Ø§Ø² Ù…Ù†ÙˆÛŒ Ø²ÛŒØ± Ú¯Ø²ÛŒÙ†Ù‡ Ù…ÙˆØ±Ø¯ Ù†Ø¸Ø± Ø®ÙˆØ¯ Ø±Ø§ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯ {EMOJI['arrow']}",
+            f"{EMOJI['welcome1']} سلام {fname} عزیز!\n\n"
+            f"به ربات رسمی نبولا استارز خوش آمدید {EMOJI['welcome2']}\n\n"
+            f"از منوی زیر گزینه مورد نظر خود را انتخاب کنید {EMOJI['arrow']}",
             reply_markup=main_menu())
         return
 
     is_member = await check_membership(uid)
     if not is_member:
         await edit_message(chat_id, msg_id,
-            "âš ï¸ Ù„Ø·ÙØ§Ù‹ Ø§Ø¨ØªØ¯Ø§ Ø¯Ø± Ú©Ø§Ù†Ø§Ù„â€ŒÙ‡Ø§ÛŒ Ù…Ø§ Ø¹Ø¶Ùˆ Ø´ÙˆÛŒØ¯:",
+            "⚠️ لطفاً ابتدا در کانال‌های ما عضو شوید:",
             reply_markup=join_keyboard())
         return
 
     if data == "back_main":
         await edit_message(chat_id, msg_id,
-            f"{EMOJI['welcome1']} Ø³Ù„Ø§Ù… {fname} Ø¹Ø²ÛŒØ²!\n\n"
-            f"Ø§Ø² Ù…Ù†ÙˆÛŒ Ø²ÛŒØ± Ú¯Ø²ÛŒÙ†Ù‡ Ù…ÙˆØ±Ø¯ Ù†Ø¸Ø± Ø®ÙˆØ¯ Ø±Ø§ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯ {EMOJI['arrow']}",
+            f"{EMOJI['welcome1']} سلام {fname} عزیز!\n\n"
+            f"از منوی زیر گزینه مورد نظر خود را انتخاب کنید {EMOJI['arrow']}",
             reply_markup=main_menu())
 
     elif data == "stars":
@@ -300,13 +300,13 @@ async def handle_callback(callback):
         if remaining == STARS_PER_REFERRAL:
             remaining = 0
 
-        text = (f"{pe('5325547803936572038','âœ¨')} <b>Ø¨Ø®Ø´ Ø§Ø³ØªØ§Ø±Ø²</b>\n\n"
-                f"{pe('5325547803936572038','âœ¨')} Ø§Ø³ØªØ§Ø±Ø²Ù‡Ø§ÛŒ Ú©Ø³Ø¨â€ŒØ´Ø¯Ù‡: <code>{stars}</code>\n"
-                f"{pe('5397782960512444700','ðŸ“Œ')} Ø¨Ù‡ Ø§Ø²Ø§ÛŒ Ù‡Ø± <b>{STARS_PER_REFERRAL} Ø¯Ø¹ÙˆØª</b>ØŒ ÛŒÚ© Ø§Ø³ØªØ§Ø±Ø² Ø¬Ø§ÛŒØ²Ù‡ Ù…ÛŒâ€ŒÚ¯ÛŒØ±ÛŒØ¯!\n")
+        text = (f"{pe('5325547803936572038','✨')} <b>بخش استارز</b>\n\n"
+                f"{pe('5325547803936572038','✨')} استارزهای کسب‌شده: <code>{stars}</code>\n"
+                f"{pe('5397782960512444700','📌')} به ازای هر <b>{STARS_PER_REFERRAL} دعوت</b>، یک استارز جایزه می‌گیرید!\n")
         if remaining > 0:
-            text += f"{pe('5231012545799666522','ðŸ”')} ØªØ§ Ø§Ø³ØªØ§Ø±Ø² Ø¨Ø¹Ø¯ÛŒ: <b>{remaining} Ø¯Ø¹ÙˆØª Ø¯ÛŒÚ¯Ø±</b>"
+            text += f"{pe('5231012545799666522','🔍')} تا استارز بعدی: <b>{remaining} دعوت دیگر</b>"
         else:
-            text += f"{pe('5206607081334906820','âœ”ï¸')} Ø´Ù…Ø§ ÙˆØ§Ø¬Ø¯ Ø´Ø±Ø§ÛŒØ· Ø¯Ø±ÛŒØ§ÙØª Ø§Ø³ØªØ§Ø±Ø² Ù‡Ø³ØªÛŒØ¯!"
+            text += f"{pe('5206607081334906820','✔️')} شما واجد شرایط دریافت استارز هستید!"
         await edit_message(chat_id, msg_id, text, reply_markup=stars_keyboard())
 
     elif data == "referral":
@@ -314,18 +314,18 @@ async def handle_callback(callback):
         ref_count = db_user[3] if db_user else 0
         link = f"https://t.me/{BOT_USERNAME}?start={uid}"
         await edit_message(chat_id, msg_id,
-            f"{EMOJI['globe']} ØªÙˆØ¬Ù‡ Ø¯Ø§Ø´ØªÙ‡ Ø¨Ø§Ø´ÛŒØ¯ Ú©Ù‡ Ù‡Ø± 1 Ù†ÙØ± Ø¨Ø±Ø§Ø¨Ø± Ø¨Ø§ 1 Ø§Ù…ØªÛŒØ§Ø² Ù…ÛŒØ¨Ø§Ø´Ø¯.\n\n"
-            f"Ù„ÛŒÙ†Ú© Ø±ÙØ±Ø§Ù„ Ø´Ù…Ø§ {EMOJI['linkarrow']}\n\n"
+            f"{EMOJI['globe']} توجه داشته باشید که هر 1 نفر برابر با 1 امتیاز میباشد.\n\n"
+            f"لینک رفرال شما {EMOJI['linkarrow']}\n\n"
             f"{EMOJI['referral']} <code>{link}</code>\n\n"
-            f"{pe('5231012545799666522','ðŸ”')} ØªØ¹Ø¯Ø§Ø¯ Ø¯Ø¹ÙˆØªâ€ŒÙ‡Ø§ÛŒ Ø´Ù…Ø§: <code>{ref_count}</code>",
+            f"{pe('5231012545799666522','🔍')} تعداد دعوت‌های شما: <code>{ref_count}</code>",
             reply_markup=back_button())
 
     elif data == "get_referral":
         link = f"https://t.me/{BOT_USERNAME}?start={uid}"
         await edit_message(chat_id, msg_id,
-            f"ðŸ”— <b>Ù„ÛŒÙ†Ú© Ø¯Ø¹ÙˆØª Ø§Ø®ØªØµØ§ØµÛŒ Ø´Ù…Ø§:</b>\n\n<code>{link}</code>\n\n"
-            f"Ø§ÛŒÙ† Ù„ÛŒÙ†Ú© Ø±Ø§ Ø¨Ø§ Ø¯ÙˆØ³ØªØ§Ù† Ø®ÙˆØ¯ Ø¨Ù‡ Ø§Ø´ØªØ±Ø§Ú© Ø¨Ú¯Ø°Ø§Ø±ÛŒØ¯.\n"
-            f"Ø¨Ù‡ Ø§Ø²Ø§ÛŒ Ù‡Ø± <b>{STARS_PER_REFERRAL} Ø¯Ø¹ÙˆØª</b> Ù…ÙˆÙÙ‚ØŒ ÛŒÚ© {EMOJI['starz']} Ø§Ø³ØªØ§Ø± Ø¯Ø±ÛŒØ§ÙØª Ù…ÛŒâ€ŒÚ©Ù†ÛŒØ¯!",
+            f"🔗 <b>لینک دعوت اختصاصی شما:</b>\n\n<code>{link}</code>\n\n"
+            f"این لینک را با دوستان خود به اشتراک بگذارید.\n"
+            f"به ازای هر <b>{STARS_PER_REFERRAL} دعوت</b> موفق، یک {EMOJI['starz']} استار دریافت می‌کنید!",
             reply_markup=back_button("stars"))
 
     elif data == "claim_star":
@@ -333,40 +333,40 @@ async def handle_callback(callback):
         stars = db_user[4] if db_user else 0
         if stars <= 0:
             await edit_message(chat_id, msg_id,
-                f"{pe('5271604874419647061','âš ï¸')} Ø´Ù…Ø§ Ø¯Ø± Ø­Ø§Ù„ Ø­Ø§Ø¶Ø± Ø§Ø³ØªØ§Ø±Ø²ÛŒ Ø¨Ø±Ø§ÛŒ Ø¯Ø±ÛŒØ§ÙØª Ù†Ø¯Ø§Ø±ÛŒØ¯.\n\n"
-                f"{pe('5447644880824181073','ðŸ”—')} Ø¨Ù‡ Ø§Ø²Ø§ÛŒ Ù‡Ø± {STARS_PER_REFERRAL} Ø¯Ø¹ÙˆØªØŒ ÛŒÚ© Ø§Ø³ØªØ§Ø±Ø² Ú©Ø³Ø¨ Ù…ÛŒâ€ŒÚ©Ù†ÛŒØ¯!",
+                f"{pe('5271604874419647061','⚠️')} شما در حال حاضر استارزی برای دریافت ندارید.\n\n"
+                f"{pe('5447644880824181073','🔗')} به ازای هر {STARS_PER_REFERRAL} دعوت، یک استارز کسب می‌کنید!",
                 reply_markup=back_button("stars"))
             return
         user_states[uid] = {"state": "waiting_post_link", "stars": stars}
         await edit_message(chat_id, msg_id,
-            f"ðŸŽ Ø´Ù…Ø§ <b>{stars} Ø§Ø³ØªØ§Ø±</b> Ø¯Ø§Ø±ÛŒØ¯!\n\n"
-            "Ù„Ø·ÙØ§Ù‹ Ù„ÛŒÙ†Ú© Ù¾Ø³ØªÛŒ Ú©Ù‡ Ù…ÛŒâ€ŒØ®ÙˆØ§Ù‡ÛŒØ¯ Ø§Ø³ØªØ§Ø± Ø±ÙˆÛŒ Ø¢Ù† Ø«Ø¨Øª Ø´ÙˆØ¯ Ø±Ø§ Ø§Ø±Ø³Ø§Ù„ Ú©Ù†ÛŒØ¯:\n\n"
-            "ðŸ“Ž Ù…Ø«Ø§Ù„: <code>https://t.me/yourchannel/123</code>",
+            f"🎁 شما <b>{stars} استار</b> دارید!\n\n"
+            "لطفاً لینک پستی که می‌خواهید استار روی آن ثبت شود را ارسال کنید:\n\n"
+            "📎 مثال: <code>https://t.me/yourchannel/123</code>",
             reply_markup=back_button("stars"))
 
     elif data == "account":
         db_user = get_user(uid)
         ref_count = db_user[3] if db_user else 0
         stars = db_user[4] if db_user else 0
-        username_text = f"@{uname}" if uname else "Ù†Ø¯Ø§Ø±Ø¯"
+        username_text = f"@{uname}" if uname else "ندارد"
         is_owner = uid == OWNER_ID
-        owner_line = f"\n{EMOJI['owner']} Ù…Ø§Ù„Ú© Ø±Ø¨Ø§Øª\n" if is_owner else ""
+        owner_line = f"\n{EMOJI['owner']} مالک ربات\n" if is_owner else ""
 
         await edit_message(chat_id, msg_id,
-            f"{EMOJI['acctitle']} Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø´Ù…Ø§{owner_line}\n\n"
-            f"{EMOJI['name']} Ù†Ø§Ù…: {fname}\n"
-            f"{EMOJI['id']} Ø¢ÛŒØ¯ÛŒ: <code>{uid}</code>\n"
-            f"{EMOJI['username']} ÛŒÙˆØ²Ø±Ù†ÛŒÙ…: {username_text}\n\n"
-            f"{EMOJI['invites']} ØªØ¹Ø¯Ø§Ø¯ Ø¯Ø¹ÙˆØªâ€ŒÙ‡Ø§: <code>{ref_count}</code>\n"
-            f"{EMOJI['starz']} Ø§Ø³ØªØ§Ø±Ø²Ù‡Ø§ÛŒ Ù…ÙˆØ¬ÙˆØ¯: <code>{stars}</code>",
+            f"{EMOJI['acctitle']} حساب کاربری شما{owner_line}\n\n"
+            f"{EMOJI['name']} نام: {fname}\n"
+            f"{EMOJI['id']} آیدی: <code>{uid}</code>\n"
+            f"{EMOJI['username']} یوزرنیم: {username_text}\n\n"
+            f"{EMOJI['invites']} تعداد دعوت‌ها: <code>{ref_count}</code>\n"
+            f"{EMOJI['starz']} استارزهای موجود: <code>{stars}</code>",
             reply_markup=back_button())
 
     elif data == "support":
         user_states[uid] = {"state": "waiting_support"}
         await edit_message(chat_id, msg_id,
-            f"{pe('5251203410396458957','ðŸ›¡')} <b>Ø¨Ø®Ø´ Ù¾Ø´ØªÛŒØ¨Ø§Ù†ÛŒ</b>\n\n"
-            f"{pe('5440621591387980068','ðŸ”œ')} Ù¾ÛŒØ§Ù… ÛŒØ§ Ù…Ø´Ú©Ù„ Ø®ÙˆØ¯ Ø±Ø§ Ø¨Ù†ÙˆÛŒØ³ÛŒØ¯ Ùˆ Ø§Ø±Ø³Ø§Ù„ Ú©Ù†ÛŒØ¯.\n"
-            "Ú©Ø§Ø±Ø´Ù†Ø§Ø³Ø§Ù† Ù…Ø§ Ø¯Ø± Ø§Ø³Ø±Ø¹ ÙˆÙ‚Øª Ù¾Ø§Ø³Ø® Ø®ÙˆØ§Ù‡Ù†Ø¯ Ø¯Ø§Ø¯. ðŸ™",
+            f"{pe('5251203410396458957','🛡')} <b>بخش پشتیبانی</b>\n\n"
+            f"{pe('5440621591387980068','🔜')} پیام یا مشکل خود را بنویسید و ارسال کنید.\n"
+            "کارشناسان ما در اسرع وقت پاسخ خواهند داد. 🙏",
             reply_markup=back_button())
 
 async def handle_message(message):
@@ -376,80 +376,80 @@ async def handle_message(message):
     uname = user.get("username", "")
     text = message.get("text", "")
 
-    # Ù¾Ø§Ø³Ø® Ø§Ø¯Ù…ÛŒÙ† Ø¨Ù‡ ØªÛŒÚ©Øª
+    # پاسخ ادمین به تیکت
     if uid == OWNER_ID and message.get("reply_to_message"):
         orig = message["reply_to_message"].get("text", "")
-        if "ØªÛŒÚ©Øª Ø´Ù…Ø§Ø±Ù‡" in orig:
+        if "تیکت شماره" in orig:
             for line in orig.split("\n"):
-                if "Ø¢ÛŒØ¯ÛŒ:" in line:
+                if "آیدی:" in line:
                     try:
                         target_uid = int(line.split(":")[1].strip())
                         await send_message(target_uid,
-                            f"ðŸ“© <b>Ù¾Ø§Ø³Ø® Ù¾Ø´ØªÛŒØ¨Ø§Ù†ÛŒ Ù†Ø¨ÙˆÙ„Ø§:</b>\n\n{text}")
-                        await send_message(uid, "âœ… Ù¾Ø§Ø³Ø® Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§Ø±Ø³Ø§Ù„ Ø´Ø¯.")
+                            f"📩 <b>پاسخ پشتیبانی نبولا:</b>\n\n{text}")
+                        await send_message(uid, "✅ پاسخ با موفقیت ارسال شد.")
                     except:
-                        await send_message(uid, "âš ï¸ Ø®Ø·Ø§ Ø¯Ø± Ø§Ø±Ø³Ø§Ù„ Ù¾Ø§Ø³Ø®.")
+                        await send_message(uid, "⚠️ خطا در ارسال پاسخ.")
                     return
 
-    # Ø¯Ø³ØªÙˆØ±Ø§Øª Ø§Ø¯Ù…ÛŒÙ†
+    # دستورات ادمین
     if text.startswith("/done") and uid == OWNER_ID:
         parts = text.split()
         if len(parts) < 3:
-            await send_message(uid, "âš ï¸ ÙØ±Ù…Øª: /done [user_id] [request_id]")
+            await send_message(uid, "⚠️ فرمت: /done [user_id] [request_id]")
             return
         try:
             target_uid = int(parts[1])
             req_id = int(parts[2])
 
-            # Ú¯Ø±ÙØªÙ† Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø¯Ø±Ø®ÙˆØ§Ø³Øª
+            # گرفتن اطلاعات درخواست
             conn = sqlite3.connect("nebula.db")
             c = conn.cursor()
             c.execute("SELECT post_link FROM star_requests WHERE id = ?", (req_id,))
             row = c.fetchone()
-            post_link = row[0] if row else "Ù†Ø§Ù…Ø´Ø®Øµ"
+            post_link = row[0] if row else "نامشخص"
             conn.close()
 
-            # Ú¯Ø±ÙØªÙ† Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ú©Ø§Ø±Ø¨Ø±
+            # گرفتن اطلاعات کاربر
             db_user = get_user(target_uid)
             fname = db_user[2] if db_user else str(target_uid)
             stars = (db_user[4] if db_user else 0)
 
             done_request(target_uid, req_id)
 
-            # Ù¾ÛŒØ§Ù… Ø¨Ù‡ Ú©Ø§Ø±Ø¨Ø±
+            # پیام به کاربر
             await send_message(target_uid,
-                f"{pe('5206607081334906820','âœ”ï¸')} <b>Ø§Ø³ØªØ§Ø±Ø² Ø´Ù…Ø§ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø«Ø¨Øª Ø´Ø¯!</b>\n\n"
-                "Ù…Ù…Ù†ÙˆÙ† Ø§Ø² Ø§ÛŒÙ†Ú©Ù‡ Ø¯Ø± Ù†Ø¨ÙˆÙ„Ø§ Ø§Ø³ØªØ§Ø±Ø² ÙØ¹Ø§Ù„ Ù‡Ø³ØªÛŒØ¯. ðŸ’«")
+                f"{pe('5206607081334906820','✔️')} <b>استارز شما با موفقیت ثبت شد!</b>\n\n"
+                "ممنون از اینکه در نبولا استارز فعال هستید. 💫")
 
-            # Ù¾ÛŒØ§Ù… Ø¹Ù…ÙˆÙ…ÛŒ Ø¨Ù‡ Ú©Ø§Ù†Ø§Ù„ NebulaRefaccept
+            # پیام عمومی به کانال NebulaRefaccept
             public_msg = (
-                f"{pe('5438496463044752972','â­ï¸')} <b>Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ø¬Ø¯ÛŒØ¯</b>\n\n"
-                f"{pe('5461117441612462242','ðŸ™‚')} Ú©Ø§Ø±Ø¨Ø±: {fname}\n"
-                f"{pe('5447644880824181073','ðŸ”—')} Ù„ÛŒÙ†Ú© Ù¾Ø³Øª: {post_link}\n"
-                f"{pe('5325547803936572038','âœ¨')} ØªØ¹Ø¯Ø§Ø¯ Ø§Ø³ØªØ§Ø±Ø²: {stars}\n\n"
-                f"{pe('5206607081334906820','âœ”ï¸')} Ø§Ù†Ø¬Ø§Ù… Ø´Ø¯"
+                f"{pe('5438496463044752972','⭐️')} <b>درخواست جدید</b>\n\n"
+                f"{pe('5461117441612462242','🙂')} کاربر: {fname}\n"
+                f"{pe('5447644880824181073','🔗')} لینک پست: {post_link}\n"
+                f"{pe('5325547803936572038','✨')} تعداد استارز: {stars}\n\n"
+                f"{pe('5206607081334906820','✔️')} انجام شد"
             )
             register_btn = {
                 "inline_keyboard": [[
-                    {"text": "âœ¨ Ø³ÙØ§Ø±Ø´ Ø®ÙˆØ¯ Ø±Ø§ Ø«Ø¨Øª Ú©Ù†ÛŒØ¯ âœ¨",
+                    {"text": "✨ سفارش خود را ثبت کنید ✨",
                      "url": f"https://t.me/{BOT_USERNAME}",
                      "icon_custom_emoji_id": "5325547803936572038"}
                 ]]
             }
             await send_message(-1004347111274, public_msg, reply_markup=register_btn)
-            await send_message(uid, f"âœ… Ø§Ø³ØªØ§Ø±Ø² Ú©Ø§Ø±Ø¨Ø± {target_uid} Ø«Ø¨Øª Ø´Ø¯.")
+            await send_message(uid, f"✅ استارز کاربر {target_uid} ثبت شد.")
         except Exception as e:
-            await send_message(uid, f"âš ï¸ Ø®Ø·Ø§: {e}")
+            await send_message(uid, f"⚠️ خطا: {e}")
         return
 
     if text.startswith("/stats") and uid == OWNER_ID:
         total, refs, pending, tickets = get_stats()
         await send_message(uid,
-            f"ðŸ“Š <b>Ø¢Ù…Ø§Ø± Ø±Ø¨Ø§Øª Ù†Ø¨ÙˆÙ„Ø§</b>\n\n"
-            f"ðŸ‘¥ Ú©Ù„ Ú©Ø§Ø±Ø¨Ø±Ø§Ù†: <code>{total}</code>\n"
-            f"ðŸ”— Ú©Ù„ Ø±ÛŒÙØ±Ø§Ù„â€ŒÙ‡Ø§: <code>{refs}</code>\n"
-            f"â­ï¸ Ø¯Ø±Ø®ÙˆØ§Ø³Øªâ€ŒÙ‡Ø§ÛŒ Ø¯Ø± Ø§Ù†ØªØ¸Ø§Ø±: <code>{pending}</code>\n"
-            f"ðŸŽ« ØªÛŒÚ©Øªâ€ŒÙ‡Ø§ÛŒ Ø¨Ø§Ø²: <code>{tickets}</code>")
+            f"📊 <b>آمار ربات نبولا</b>\n\n"
+            f"👥 کل کاربران: <code>{total}</code>\n"
+            f"🔗 کل ریفرال‌ها: <code>{refs}</code>\n"
+            f"⭐️ درخواست‌های در انتظار: <code>{pending}</code>\n"
+            f"🎫 تیکت‌های باز: <code>{tickets}</code>")
         return
 
     if text.startswith("/start"):
@@ -465,14 +465,14 @@ async def handle_message(message):
         stars = state_data.get("stars", 1)
         req_id = add_star_request(uid, text)
         reserve_msg = (
-            f"{pe('5253742260054409879','âœ‰ï¸')} <b>Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ø§Ø³ØªØ§Ø±Ø² Ø¬Ø¯ÛŒØ¯</b>\n\n"
-            f"{pe('5210956306952758910','ðŸ‘€')} Ú©Ø§Ø±Ø¨Ø±: {fname}\n"
-            f"{pe('5303479226882603449','ðŸ˜¯')} Ø¢ÛŒØ¯ÛŒ: <code>{uid}</code>\n"
-            f"{pe('5276032951342088188','ðŸ’¥')} ÛŒÙˆØ²Ø±Ù†ÛŒÙ…: @{uname or 'Ù†Ø¯Ø§Ø±Ø¯'}\n"
-            f"{pe('5413879192267805083','ðŸ—“')} Ø²Ù…Ø§Ù†: {datetime.now().strftime('%Y/%m/%d - %H:%M')}\n"
-            f"ðŸ”— Ù„ÛŒÙ†Ú© Ù¾Ø³Øª: {text}\nâ­ï¸ ØªØ¹Ø¯Ø§Ø¯ Ø§Ø³ØªØ§Ø±Ø²: {stars}\n"
-            f"ðŸ†” Ø´Ù…Ø§Ø±Ù‡ Ø¯Ø±Ø®ÙˆØ§Ø³Øª: #{req_id}\n\n"
-            f"Ù¾Ø³ Ø§Ø² Ø«Ø¨ØªØŒ Ø¯Ø³ØªÙˆØ± Ø²ÛŒØ± Ø±Ø§ Ø§Ø±Ø³Ø§Ù„ Ú©Ù†ÛŒØ¯:\n"
+            f"{pe('5253742260054409879','✉️')} <b>درخواست استارز جدید</b>\n\n"
+            f"{pe('5210956306952758910','👀')} کاربر: {fname}\n"
+            f"{pe('5303479226882603449','😯')} آیدی: <code>{uid}</code>\n"
+            f"{pe('5276032951342088188','💥')} یوزرنیم: @{uname or 'ندارد'}\n"
+            f"{pe('5413879192267805083','🗓')} زمان: {datetime.now().strftime('%Y/%m/%d - %H:%M')}\n"
+            f"🔗 لینک پست: {text}\n⭐️ تعداد استارز: {stars}\n"
+            f"🆔 شماره درخواست: #{req_id}\n\n"
+            f"پس از ثبت، دستور زیر را ارسال کنید:\n"
             f"<code>/done {uid} {req_id}</code>"
         )
         try:
@@ -484,20 +484,20 @@ async def handle_message(message):
         except:
             pass
         await send_message(uid,
-            f"âœ… <b>Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ø´Ù…Ø§ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø«Ø¨Øª Ø´Ø¯!</b>\n\n"
-            f"ðŸ”— Ù„ÛŒÙ†Ú© Ù¾Ø³Øª: {text}\nâ­ï¸ ØªØ¹Ø¯Ø§Ø¯ Ø§Ø³ØªØ§Ø±: {stars}\n\n"
-            "Ù¾Ø³ Ø§Ø² Ø¨Ø±Ø±Ø³ÛŒØŒ Ø§Ø³ØªØ§Ø± Ø´Ù…Ø§ Ø«Ø¨Øª Ø®ÙˆØ§Ù‡Ø¯ Ø´Ø¯. ðŸ™",
+            f"✅ <b>درخواست شما با موفقیت ثبت شد!</b>\n\n"
+            f"🔗 لینک پست: {text}\n⭐️ تعداد استار: {stars}\n\n"
+            "پس از بررسی، استار شما ثبت خواهد شد. 🙏",
             reply_markup=main_menu())
 
     elif state == "waiting_support":
         user_states.pop(uid, None)
         ticket_id = add_ticket(uid, text)
         ticket_msg = (
-            f"ðŸŽ« <b>ØªÛŒÚ©Øª Ø´Ù…Ø§Ø±Ù‡ #{ticket_id}</b>\n\n"
-            f"ðŸ‘¤ Ú©Ø§Ø±Ø¨Ø±: {fname}\nðŸ†” Ø¢ÛŒØ¯ÛŒ: <code>{uid}</code>\n"
-            f"ðŸ“Ž ÛŒÙˆØ²Ø±Ù†ÛŒÙ…: @{uname or 'Ù†Ø¯Ø§Ø±Ø¯'}\n"
-            f"ðŸ“… Ø²Ù…Ø§Ù†: {datetime.now().strftime('%Y/%m/%d - %H:%M')}\n\n"
-            f"ðŸ’¬ Ù¾ÛŒØ§Ù…:\n{text}\n\nØ¨Ø±Ø§ÛŒ Ù¾Ø§Ø³Ø®ØŒ Ø±ÙˆÛŒ Ø§ÛŒÙ† Ù¾ÛŒØ§Ù… Reply Ú©Ù†ÛŒØ¯."
+            f"🎫 <b>تیکت شماره #{ticket_id}</b>\n\n"
+            f"👤 کاربر: {fname}\n🆔 آیدی: <code>{uid}</code>\n"
+            f"📎 یوزرنیم: @{uname or 'ندارد'}\n"
+            f"📅 زمان: {datetime.now().strftime('%Y/%m/%d - %H:%M')}\n\n"
+            f"💬 پیام:\n{text}\n\nبرای پاسخ، روی این پیام Reply کنید."
         )
         try:
             await send_message(OWNER_ID, ticket_msg)
@@ -508,20 +508,30 @@ async def handle_message(message):
         except:
             pass
         await send_message(uid,
-            f"âœ… <b>ØªÛŒÚ©Øª Ø´Ù…Ø§ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø«Ø¨Øª Ø´Ø¯!</b>\n\n"
-            f"ðŸŽ« Ø´Ù…Ø§Ø±Ù‡ ØªÛŒÚ©Øª: #{ticket_id}\n\n"
-            "Ú©Ø§Ø±Ø´Ù†Ø§Ø³Ø§Ù† Ù…Ø§ Ø¨Ù‡ Ø²ÙˆØ¯ÛŒ Ù¾Ø§Ø³Ø® Ø®ÙˆØ§Ù‡Ù†Ø¯ Ø¯Ø§Ø¯. ðŸ™",
+            f"✅ <b>تیکت شما با موفقیت ثبت شد!</b>\n\n"
+            f"🎫 شماره تیکت: #{ticket_id}\n\n"
+            "کارشناسان ما به زودی پاسخ خواهند داد. 🙏",
             reply_markup=main_menu())
     else:
         await send_message(uid,
-            f"Ø§Ø² Ù…Ù†ÙˆÛŒ Ø²ÛŒØ± Ú¯Ø²ÛŒÙ†Ù‡ Ù…ÙˆØ±Ø¯ Ù†Ø¸Ø± Ø±Ø§ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯ {EMOJI['arrow']}",
+            f"از منوی زیر گزینه مورد نظر را انتخاب کنید {EMOJI['arrow']}",
             reply_markup=main_menu())
 
-# ==================== Ù¾ÙˆÙ„ÛŒÙ†Ú¯ ====================
-async def main():
-    init_db()
+# ==================== پولینگ ====================
+async def web_server():
+    from aiohttp import web
+    async def health(request):
+        return web.Response(text="OK")
+    app = web.Application()
+    app.router.add_get("/", health)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", 8080)
+    await site.start()
+
+async def polling():
     offset = None
-    print("âœ… Ø±Ø¨Ø§Øª Ù†Ø¨ÙˆÙ„Ø§ Ø§Ø³ØªØ§Ø±Ø² Ø¯Ø± Ø­Ø§Ù„ Ø§Ø¬Ø±Ø§Ø³Øª...")
+    print("✅ ربات نبولا استارز در حال اجراست...")
     async with httpx.AsyncClient() as client:
         while True:
             try:
@@ -545,6 +555,10 @@ async def main():
             except Exception as e:
                 logging.error(f"Polling error: {e}")
                 await asyncio.sleep(5)
+
+async def main():
+    init_db()
+    await asyncio.gather(web_server(), polling())
 
 if __name__ == "__main__":
     asyncio.run(main())
